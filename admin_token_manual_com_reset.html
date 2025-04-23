@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Painel Admin GHC (Token Manual)</title>
+  <style>
+    body {
+      background: #121212;
+      color: white;
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: gold;
+    }
+    input, button, textarea {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      font-size: 16px;
+    }
+    button {
+      background: gold;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .jogador {
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Painel Admin GHC 🛠️</h1>
+
+  <label for="token">🔒 Cole seu token do GitHub:</label>
+  <input type="password" id="token" placeholder="github_pat_..." />
+
+  <form id="rodadaForm">
+    <div id="campos"></div>
+    <button type="submit">Registrar Rodada</button>
+  
+    </form>
+    <button onclick="resetarRanking()">🔄 Resetar Ranking</button>
+    
+
+  <textarea id="jsonPreview" rows="10" placeholder="Pré-visualização do JSON..."></textarea>
+
+  <script>
+    const jogadoresMax = 10;
+    const pontos = [10, 6, 4, 3, 2, 1, 1, 1, 1, 1];
+
+    const camposContainer = document.getElementById("campos");
+    for (let i = 0; i < jogadoresMax; i++) {
+      const input = document.createElement("input");
+      input.placeholder = (i+1) + "º lugar";
+      input.name = "jogador" + (i+1);
+      input.className = "jogador";
+      camposContainer.appendChild(input);
+    }
+
+    document.getElementById("rodadaForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const token = document.getElementById("token").value.trim();
+      if (!token) return alert("Por favor, cole seu token do GitHub.");
+
+      const dados = [];
+      for (let i = 0; i < jogadoresMax; i++) {
+        const nome = form["jogador" + (i+1)].value.trim();
+        if (nome) {
+          dados.push({ nome, pontos: pontos[i] });
+        }
+      }
+
+      const agrupado = agruparRanking(dados);
+      const jsonFinal = JSON.stringify(agrupado, null, 2);
+      document.getElementById("jsonPreview").value = jsonFinal;
+
+      // GET SHA atual do ranking.json
+      const repo = "ghc-ranking";
+      const owner = "cpfnanota";
+      const path = "ranking.json";
+
+      const resGet = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+        headers: {
+          Authorization: `token ${token}`
+        }
+      });
+
+      const file = await resGet.json();
+      const sha = file.sha;
+
+      const resPut = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `token ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message: "Atualização do ranking via painel (token manual)",
+          content: btoa(unescape(encodeURIComponent(jsonFinal))),
+          sha: sha
+        })
+      });
+
+      if (resPut.ok) {
+        alert("Ranking atualizado com sucesso no GitHub!");
+        form.reset();
+      } else {
+        alert("Erro ao atualizar ranking. Verifique o token e permissões.");
+      }
+    });
+
+    function agruparRanking(lista) {
+      const mapa = {};
+      lista.forEach(j => {
+        if (j.nome in mapa) {
+          mapa[j.nome].pontos += j.pontos;
+        } else {
+          mapa[j.nome] = { ...j };
+        }
+      });
+      return Object.values(mapa).sort((a, b) => b.pontos - a.pontos);
+    }
+  
+    function resetarRanking() {
+      const token = document.getElementById("token").value.trim();
+      if (!token) return alert("Por favor, cole seu token do GitHub.");
+
+      const jsonVazio = JSON.stringify([], null, 2);
+
+      fetch("https://api.github.com/repos/cpfnanota/ghc-ranking/contents/ranking.json", {
+        method: "GET",
+        headers: {
+          Authorization: `token ${token}`
+        }
+      })
+      .then(res => res.json())
+      .then(file => {
+        return fetch("https://api.github.com/repos/cpfnanota/ghc-ranking/contents/ranking.json", {
+          method: "PUT",
+          headers: {
+            Authorization: `token ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            message: "Reset do ranking via painel",
+            content: btoa(unescape(encodeURIComponent(jsonVazio))),
+            sha: file.sha
+          })
+        });
+      })
+      .then(res => {
+        if (res.ok) {
+          alert("Ranking resetado com sucesso.");
+        } else {
+          alert("Erro ao resetar ranking.");
+        }
+      });
+    }
+    </script>
+    
+</body>
+</html>

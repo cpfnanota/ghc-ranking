@@ -1,1 +1,30 @@
-[]
+[
+  {
+    "nome": "kadu",
+    "pontos": 10
+  },
+  {
+    "nome": "marçal",
+    "pontos": 6
+  },
+  {
+    "nome": "caio",
+    "pontos": 4
+  },
+  {
+    "nome": "lucas",
+    "pontos": 3
+  },
+  {
+    "nome": "gustavo",
+    "pontos": 2
+  },
+  {
+    "nome": "pedro",
+    "pontos": 1
+  },
+  {
+    "nome": "jjjj",
+    "pontos": 1
+  }
+]

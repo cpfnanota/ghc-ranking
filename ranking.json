@@ -1,10 +1,26 @@
 [
   {
-    "nome": "Kadu",
+    "nome": "kadu",
     "pontos": 10
   },
   {
-    "nome": "Marçal",
+    "nome": "caio",
     "pontos": 6
+  },
+  {
+    "nome": "marçal",
+    "pontos": 4
+  },
+  {
+    "nome": "silva",
+    "pontos": 3
+  },
+  {
+    "nome": "lucas",
+    "pontos": 2
+  },
+  {
+    "nome": "master",
+    "pontos": 1
   }
 ]
